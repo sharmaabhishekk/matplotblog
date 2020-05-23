@@ -14,13 +14,13 @@ resources:
     showOnTop: true
 ---
 
-A while back, I came across this cool [repository](https://github.com/willdady/emosaic) to create emoji-art from images. I wanted to use it transform my mundane Facebook profile picture to something more snazzy. The only trouble? It was written in Rust. 
+A while back, I came across this cool [repository](https://github.com/willdady/emosaic) to create emoji-art from images. I wanted to use it to transform my mundane Facebook profile picture to something more snazzy. The only trouble? It was written in Rust. 
 
 So instead of going through the process of installing Rust, I decided to take the easy route and spin up some code to do the same in Python using matplotlib.
 
 (Because that's what anyone sane would do, right?)
 
-In this post, I'll try to explain my process as we attempt to recreate similar mosaics as this one below. I've aimed this post at people who are beginners to image processing but I guess, anyone can follow along.
+In this post, I'll try to explain my process as we attempt to recreate similar mosaics as this one below. I've aimed this post at people who are beginners to image processing but, I guess, anyone can follow along.
 
 ![alt text](./warhol.png "Emosaic by Will Dady")
 
@@ -57,7 +57,7 @@ plt.imshow(img)
 
 **Note**: *The image displayed above is 100x100 but we'll use a 32x32 from here on since that's gonna suffice all our needs.* 
 
-A quick refresher. An image is essentially just a matrix (say A), where every individual pixel (p) are elements of A. If it's a grayscale image, every pixel (p) is just a single number (or a scalar) - in the range [0,1] if float, or [0,255] if int. If it's not grayscale - like in our case - every pixel is a vector of either dimension 3 - **Red**(R), **Green**(G), and **Blue**(B), or dimension 4 - RGBA(A stands for **Alpha** which is basically transparency). 
+A quick refresher. An image is essentially just a matrix (say A), where every individual pixel (p) in an element of A. If it's a grayscale image, every pixel (p) is just a single number (or a scalar) - in the range [0,1] if float, or [0,255] if int. If it's not grayscale - like in our case - every pixel is a vector of either dimension 3 - **Red**(R), **Green**(G), and **Blue**(B), or dimension 4 - RGBA(A stands for **Alpha** which is basically transparency). 
 
 If anything is unclear so far, I'd strongly suggest going through a post like [this](https://matplotlib.org/3.1.1/tutorials/introductory/images.html) or [this](http://scipy-lectures.org/advanced/image_processing/). Knowing that an image can be represented as a matrix or a numpy array greatly helps us as almost every transformation of the image can be represented in terms of matrix maths.
 
@@ -83,13 +83,16 @@ color=img[0][0]/255.0 ##RGBA only accepts values in the 0-1 range
 ax.fill([0, 1, 1, 0], [0, 0, 1, 1], color=color)
 ```
 That should give you a square filled with the color of the first pixel of `img`. 
+<!-- I'd add the pic of the img if you have it)``>
 
 ## Methodology
 
-We want to go from a plain image to an image full of emojis - or in other words, __an image of images__. Essentially, we're going to replace all pixels with emojis. However, to ensure that our new emojimage (yes, I just coined that word) looks like the original image and not just random creepy smiley faces, the trick is to make sure that *every pixel is replaced my an emoji which has similar color to that pixel*. That's what gives the result the look of a mosaic.
+We want to go from a plain image to an image full of emojis - or in other words, __an image of images__. Essentially, we're going to replace all pixels with emojis. However, to ensure that our new emojimage (yes, I just coined that word) <!--even  though true, wouldn't write this since there's a coupld of libraries including one in python named that that do the samething as emosaic-->
+looks like the original image and not just random creepy smiley faces, the trick is to make sure that *every pixel is replaced by an emoji which has similar color to that pixel*. That's what gives the result the look of a mosaic.
 
 'Similar' really just means that the __mean__ (median is also worth trying) color of the emoji should be close to the pixel it replaces. 
 So how do you find the mean color of an entire image? Easy. We just take all the RGBA arrays and average the Rs together, and then the Gs together, and then the Bs together, and then the As together (the As, by the way, are just all 1 so the mean is also going to be 1). Here's that idea expressed formally -
+
 
 \\[ (r, g, b){\mu}=\left(\frac{\left(r{1}+r_{2}+\ldots+r_{N}\right)}{N}, \frac{\left(g_{1}+g_{2}+\ldots+g_{N}\right)}{N}, \frac{\left(b_{1}+b_{2}+\ldots+b_{N}\right)}{N}\right) \\]
 
@@ -108,7 +111,7 @@ So now our steps become somewhat like this -
 
 **Part II** - Reshape emojis to image
 
-1. Reshape the flatten array of all Es back to the shape of our image.
+1. Reshape the flattened array of all Es back to the shape of our image.
 2. Concatenate all emojis into a single array (reduce dimensions).
 
 
@@ -133,6 +136,7 @@ We've seen the formula above; here's the numpy code for it. We're gonna iterate 
 ```python
 emoji_dict = {num: ar.mean(axis=(0,1)) for num, ar in enumerate(emoji_array)} ##np.median(ar, axis=(0,1)) ##for median instead of mean
 ```
+<!-- not clear why this isn't an array since it's indexed by enumerate and later you only grab the values-->
 
 ### Step I3 and I4 - finding closest emoji match for all pixels
 
@@ -170,6 +174,8 @@ To grasp our problem intuitively, think about it this way. What we have right no
 What we want is to merge them all together. Like so -
 
 !["Rejoined panda img"](./rejoined_face.png)
+
+<!--cite where you got the panda from, especially if it's not CC-->
 
 To think about it slightly more technically, what we have right now is a *five* dimensional array. What we need is to rehshape it in such a way that it's - at maximum - *three* dimensional. However, it's not as easy as a simple `np.reshape`. 
 
@@ -244,5 +250,5 @@ Some final thoughts to wrap this up.
 
 ------
 
-I hope you enjoyed this post and learned something from it. If you have any feedback, criticism, questions, please feel free to DM me on twitter or email me (preferably the former since I'm almost always on there). Thank you, take care, and remember to wash your hands!
+I hope you enjoyed this post and learned something from it. If you have any feedback, criticism, questions, please feel free to DM me on twitter <!--you should put you handle here-->or email me (preferably the former since I'm almost always on there). Thank you, take care, and remember to wash your hands!
 
